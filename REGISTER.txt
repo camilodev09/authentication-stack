@@ -3,61 +3,61 @@
 
 import { useState } from "react";
 import { FaWhatsapp, FaPhone, FaEnvelope } from "react-icons/fa";
-import { useRouter } from "next/navigation";
-
+import { signIn, signOut, useSession } from "next-auth/react";
 
 
 const FormularyRegister = () => {
-  const router = useRouter(); // Obtener el enrutador
   const [errMsg, setErrMsg] = useState("");
   const [successMsg, setSuccessMsg] = useState("");
   const [showSuccessMsg, setShowSuccessMsg] = useState(false); // Nuevo estado
-
+  const { data: session } = useSession(); // Obtener la información de la sesión
 
   const handleSend = async (e) => {
     e.preventDefault();
+    
     const username = e.target.username.value;
     const lastname = e.target.lastname.value;
     const email = e.target.email.value;
     const password = e.target.password.value;
-
+    
     try {
-      const response = await fetch("http://localhost:3001/register", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          username,
-          lastname,
-          email,
-          password,
-        }),
+      const result = await signIn("credentials", {
+        username,
+        lastname,
+        email,
+        password,
+        redirect: false, // Evita la redirección automática después de la autenticación
       });
-      console.log(response);
-
-      if (response.ok) {
-        
-        setSuccessMsg("You are amazing");
-        router.push("/profile");
+  
+      if (result.error) {
+        setErrMsg(result.error); // Mostrar mensaje de error si hay un problema de autenticación
+        setSuccessMsg("");
       } else {
+        // La autenticación fue exitosa
         setSuccessMsg(`Gracias ${username}, tu mensaje se envió!`);
         setErrMsg("");
         e.target.reset();
         setShowSuccessMsg(true);
-
+  
         setTimeout(() => {
           setShowSuccessMsg(false);
           setSuccessMsg("");
         }, 5000);
       }
-    } catch (error) {
+    }
+    
+    catch (error) {
       console.log(error);
       setErrMsg(error.message);
       setSuccessMsg("");
     }
-  };
 
+  };
+  
+  const handleSignOut = async () => {
+    await signOut();
+  };
+  
 
 
   return (
@@ -113,7 +113,7 @@ const FormularyRegister = () => {
           className="w-full flex flex-col gap-3 lgl:gap-6 py-2 lgl:py-5 dark:bg-gray-950 bg-white p-3 rounded-md shadow-todoShodow pt-8 md:pt-0 shadow-shadowOne   "
         >
           <h3 className=" text-2xl pb-4 text-center font-titleFont font-semibold text-yellow-400">
-            Test Register Formulary
+            ¡Haz realidad tu proyecto, da el primer paso!
           </h3>
           {errMsg && (
             <p className="py-3 bg-gradient-to-r from-[#1e2024] to-[#23272b] shadow-shadowOne text-center text-orange-500 text-base tracking-wide animate-bounce">
@@ -204,6 +204,13 @@ const FormularyRegister = () => {
             >
               Register Now
             </button>
+
+
+            {session && (
+  <button onClick={handleSignOut}>Cerrar sesión</button>
+)}
+
+         
   
           </div>
         </form>

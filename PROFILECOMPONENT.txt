@@ -1,0 +1,91 @@
+'use client'
+
+import useSWR from 'swr';
+import { useSearchParams } from 'next/navigation';
+import Link from 'next/link';
+
+
+const fetcher = (url) => fetch(url).then((res) => res.json());
+
+const ProfileComponent = () => {
+  const { data: user, error } = useSWR('http://localhost:3001/me', fetcher);
+
+  if (error) {
+    return <div>Error al cargar los datos del usuario</div>;
+  }
+
+  if (!user) {
+    return <div>Cargando...</div>;
+  }
+  
+  const value = useSearchParams();
+  const names = value.get("username")
+
+  return (
+    <div>
+      <h1 className='border center'>FCC Advanced Node and Express Profile</h1>
+      <h2 className='center' id='welcome'>
+        Welcome, {names} . Trust & Segutity. We are the best solution. 
+      </h2>
+      <Link href='/'>Logout</Link>
+    </div>
+  );
+};
+
+export default ProfileComponent;
+
+
+// loginForm  sintaxs
+
+
+"use client";
+
+
+import { useState } from "react";
+
+import { useRouter } from "next/navigation";
+
+
+
+const LoginForm = () => {
+  
+  const router = useRouter(); // Obtener el enrutador
+  const [errMsg, setErrMsg] = useState("");
+  const [successMsg, setSuccessMsg] = useState("");
+  const [showSuccessMsg, setShowSuccessMsg] = useState(false); // Nuevo estado
+
+
+  const handleSend = async (e) => {
+    e.preventDefault();
+    const username = e.target.username.value;
+    const password = e.target.password.value;
+
+    try {
+      const response = await fetch("http://localhost:3001/login", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          username,
+          password,
+        }),
+      });
+      console.log(response);
+
+      if (response.ok) {
+        setSuccessMsg("You are amazing");
+        router.push(`/profile?username=${username}`); 
+      } else {
+        setErrMsg("User not found"); // Cambia el mensaje de error
+        setSuccessMsg("");
+        setShowSuccessMsg(false);
+      }
+
+    } catch (error) {
+      console.log(error);
+      setErrMsg(error.message);
+      setSuccessMsg("");
+    }
+  };
+
